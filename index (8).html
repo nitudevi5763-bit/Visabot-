@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aria — AI Immigration Receptionist by VisaPath Consultants">
+    <title>Aria · AI Visa Receptionist</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* =============================================
+           DESIGN TOKENS
+        ============================================= */
+        :root {
+            /* Background layers */
+            --bg-base:        #070A12;
+            --bg-depth:       #0B0F1A;
+            --bg-surface:     #111827;
+
+            /* Glass surfaces */
+            --glass-fill:     rgba(255, 255, 255, 0.04);
+            --glass-fill-md:  rgba(255, 255, 255, 0.07);
+            --glass-stroke:   rgba(255, 255, 255, 0.08);
+            --glass-stroke-md:rgba(255, 255, 255, 0.13);
+
+            /* Accent gradient: Indigo → Violet → Cyan */
+            --accent-a:       #6366F1;   /* indigo  */
+            --accent-b:       #8B5CF6;   /* violet  */
+            --accent-c:       #22D3EE;   /* cyan    */
+            --accent-green:   #10B981;   /* online  */
+            --accent-amber:   #F59E0B;   /* stars   */
+
+            --grad-primary:   linear-gradient(135deg, #6366F1 0%, #8B5CF6 55%, #22D3EE 100%);
+            --grad-cta:       linear-gradient(135deg, #6366F1, #8B5CF6);
+            --grad-text:      linear-gradient(90deg,  #818CF8, #22D3EE);
+
+            /* Typography */
+            --font:           'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --text-hi:        #F1F5F9;
+            --text-md:        #94A3B8;
+            --text-lo:        #4B5563;
+
+            /* Shape */
+            --r-sm:   8px;
+            --r-md:   12px;
+            --r-lg:   16px;
+            --r-xl:   24px;
+            --r-full: 9999px;
+
+            /* Shadow */
+            --shadow-pop:  0 8px 32px rgba(0, 0, 0, 0.45);
+            --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.18);
+
+            /* Layout */
+            --sidebar-w: 272px;
+        }
+
+        /* =============================================
+           RESET
+        ============================================= */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--font);
+            background: var(--bg-base);
+            color: var(--text-hi);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        button {
+            font-family: var(--font);
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        textarea {
+            font-family: var(--font);
+            border: none;
+            outline: none;
+        }
+
+        /* =============================================
+           AMBIENT BACKGROUND
+        ============================================= */
+        .app-ambient {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .app-ambient::before {
+            content: '';
+            position: absolute;
+            top: -25%;
+            left: -5%;
+            width: 55%;
+            height: 55%;
+            background: radial-gradient(ellipse at center,
+                rgba(99, 102, 241, 0.09) 0%,
+                transparent 68%);
+            animation: ambientDrift 14s ease-in-out infinite alternate;
+        }
+
+        .app-ambient::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            right: -8%;
+            width: 48%;
+            height: 48%;
+            background: radial-gradient(ellipse at center,
+                rgba(34, 211, 238, 0.07) 0%,
+                transparent 68%);
+            animation: ambientDrift 18s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes ambientDrift {
+            from { transform: translate(0, 0) scale(1); }
+            to   { transform: translate(4%, 6%) scale(1.12); }
+        }
+
+        /* =============================================
+           APP SHELL
+        ============================================= */
+        .app {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* =============================================
+           SIDEBAR
+        ============================================= */
+        .sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            background: rgba(8, 12, 22, 0.88);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border-right: 1px solid var(--glass-stroke);
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+        }
+
+        .sidebar::-webkit-scrollbar { display: none; }
+
+        /* Sidebar inner padding wrapper */
+        .sidebar-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 22px 18px 28px;
+            min-height: 100%;
+        }
+
+        /* --- Sidebar: Brand --- */
+        .sb-brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--glass-stroke);
+            margin-bottom: 6px;
+        }
+
+        .sb-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: var(--r-md);
+            background: var(--grad-cta);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 18px rgba(99, 102, 241, 0.32);
+        }
+
+        .sb-brand-text { min-width: 0; }
+
+        .sb-company-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-hi);
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sb-city {
+            font-size: 11px;
+            color: var(--text-lo);
+            margin-top: 2px;
+        }
+
+        /* --- Sidebar: AI Receptionist Card --- */
+        .sb-ai-card {
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-stroke);
+            border-radius: var(--r-lg);
+            padding: 14px;
+            margin-bottom: 6px;
+        }
+
+        .sb-section-eyebrow {
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-lo);
+            margin-bottom: 10px;
+        }
+
+        .sb-ai-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 11px;
+        }
+
+        .sb-ai-avatar {
+            position: relative;
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+        }
+
+        .sb-ai-avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: var(--r-full);
+            background: var(--grad-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+        }
+
+        .sb-ai-avatar-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 9px;
+            height: 9px;
+            background: var(--accent-green);
+            border-radius: var(--r-full);
+            border: 2px solid var(--bg-depth);
+        }
+
+        .sb-ai-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-hi);
+        }
+
+        .sb-ai-role {
+            font-size: 11px;
+            color: var(--text-lo);
+            margin-top: 1px;
+        }
+
+        .sb-online-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(16, 185, 129, 0.09);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: var(--r-full);
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--accent-green);
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-green);
+            border-radius: var(--r-full);
+            flex-shrink: 0;
+            animation: pulseDot 2.2s ease-in-out infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1;   transform: scale(1);   }
+            50%       { opacity: 0.5; transform: scale(0.75); }
+        }
+
+        /* --- Sidebar: Info Sections --- */
+        .sb-section {
+            padding: 14px 0 8px;
+            border-top: 1px solid var(--glass-stroke);
+        }
+
+        .sb-info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            padding: 7px 0;
+        }
+
+        .sb-info-icon {
+            font-size: 13px;
+            width: 18px;
+            flex-shrink: 0;
+            text-align: center;
+            margin-top: 1px;
+        }
+
+        .sb-info-body { min-width: 0; flex: 1; }
+
+        .sb-info-label {
+            font-size: 10px;
+            color: var(--text-lo);
+            margin-bottom: 1px;
+        }
+
+        .sb-info-value {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-md);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Rating stars */
+        .sb-rating {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            margin-top: 1px;
+        }
+
+        .star-char {
+            color: var(--accent-amber);
+            font-size: 11px;
+            line-height: 1;
+        }
+
+        .sb-rating-score {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-hi);
+            margin-left: 4px;
+        }
+
+        .sb-rating-count {
+            font-size: 10px;
+            color: var(--text-lo);
+        }
+
+        /* Visa tags */
+        .sb-visa-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding-top: 4px;
+        }
+
+        .sb-visa-tag {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: var(--text-md);
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-stroke);
+            border-radius: var(--r-full);
+            padding: 3px 9px;
+            white-space: nowrap;
+        }
+
+        /* =============================================
+           CHAT MAIN
+        ============================================= */
+        .chat-main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            background: rgba(7, 10, 18, 0.55);
+            position: relative;
+        }
+
+        /* =============================================
+           CHAT HEADER
+        ============================================= */
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--glass-stroke);
+            background: rgba(10, 14, 24, 0.72);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            flex-shrink: 0;
+            z-index: 10;
+            position: relative;
+        }
+
+        .header-ai {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+        /* ─── SIGNATURE ELEMENT: Rotating gradient ring ─── */
+        .avatar-ring-wrap {
+            position: relative;
+            width: 46px;
+            height: 46px;
+            flex-shrink: 0;
+        }
+
+        .avatar-ring {
+            position: absolute;
+            inset: -3px;
+            border-radius: var(--r-full);
+            background: conic-gradient(
+                from 0deg,
+                var(--accent-a),
+                var(--accent-b),
+                var(--accent-c),
+                var(--accent-a)
+            );
+            animation: ringRotate 5s linear infinite;
+        }
+
+        .avatar-ring-bg {
+            position: absolute;
+            inset: 2px;
+            border-radius: var(--r-full);
+            background: var(--bg-base);
+        }
+
+        .avatar-face {
+            position: absolute;
+            inset: 3px;
+            border-radius: var(--r-full);
+            background: var(--grad-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+        }
+
+        @keyframes ringRotate {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        /* ─── End signature ─── */
+
+        .header-ai-meta { display: flex; flex-direction: column; }
+
+        .header-ai-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-hi);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            letter-spacing: -0.01em;
+        }
+
+        .verified-icon {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .header-ai-status {
+            font-size: 11.5px;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 2px;
+        }
+
+        .header-ai-status .pulse-dot {
+            width: 5px;
+            height: 5px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-powered-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 13px;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-stroke);
+            border-radius: var(--r-full);
+            font-size: 11px;
+            color: var(--text-lo);
+            letter-spacing: 0.01em;
+        }
+
+        .badge-orb {
+            width: 7px;
+            height: 7px;
+            border-radius: var(--r-full);
+            background: var(--grad-primary);
+            flex-shrink: 0;
+        }
+
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-stroke);
+            border-radius: var(--r-md);
+            color: var(--text-lo);
+            font-size: 14px;
+            transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+        }
+
+        .icon-btn:hover {
+            background: var(--glass-fill-md);
+            border-color: var(--glass-stroke-md);
+            color: var(--text-md);
+        }
+
+        /* =============================================
+           CHAT BODY (messages scroll container)
+        ============================================= */
+        .chat-body {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 28px 24px 12px;
+            display: flex;
+            flex-direction: column;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 102, 241, 0.12) transparent;
+        }
+
+        .chat-body::-webkit-scrollbar { width: 4px; }
+        .chat-body::-webkit-scrollbar-track { background: transparent; }
+        .chat-body::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.14);
+            border-radius: 2px;
+        }
+
+        /* Messages container — chat.js appends here */
+        #chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex: 1;
+        }
+
+        /* =============================================
+           MESSAGE BUBBLES
+        ============================================= */
+        .msg {
+            display: flex;
+            gap: 11px;
+            max-width: 74%;
+            animation: msgIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .msg-ai   { align-self: flex-start; }
+        .msg-user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        }
+
+        .msg-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: var(--r-full);
+            background: var(--grad-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            flex-shrink: 0;
+            margin-top: 18px; /* aligns with bubble after sender label */
+        }
+
+        .msg-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .msg-sender-label {
+            font-size: 10.5px;
+            font-weight: 600;
+            color: var(--text-lo);
+            padding: 0 4px;
+        }
+
+        .msg-user .msg-sender-label { text-align: right; }
+
+        .msg-bubble {
+            padding: 13px 16px;
+            border-radius: var(--r-lg);
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        /* AI bubble */
+        .msg-ai .msg-bubble {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-stroke);
+            color: var(--text-hi);
+            border-top-left-radius: 3px;
+        }
+
+        /* User bubble */
+        .msg-user .msg-bubble {
+            background: var(--grad-cta);
+            color: #fff;
+            border-top-right-radius: 3px;
+        }
+
+        .msg-timestamp {
+            font-size: 10px;
+            color: var(--text-lo);
+            padding: 0 4px;
+        }
+
+        .msg-user .msg-timestamp { text-align: right; }
+
+        /* Welcome message service pills — clickable */
+        .welcome-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 14px;
+            margin-bottom: 2px;
+        }
+
+        .welcome-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(99, 102, 241, 0.09);
+            border: 1px solid rgba(99, 102, 241, 0.22);
+            border-radius: var(--r-full);
+            padding: 6px 13px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: rgba(165, 180, 252, 0.92);
+            font-family: var(--font);
+            cursor: pointer;
+            user-select: none;
+            transition:
+                background   0.18s ease,
+                border-color 0.18s ease,
+                color        0.18s ease,
+                transform    0.14s ease,
+                box-shadow   0.18s ease;
+        }
+
+        .welcome-pill:hover {
+            background:   rgba(99, 102, 241, 0.2);
+            border-color: rgba(99, 102, 241, 0.45);
+            color:        #fff;
+            transform:    translateY(-2px);
+            box-shadow:   0 4px 16px rgba(99, 102, 241, 0.2);
+        }
+
+        .welcome-pill:active {
+            transform:  translateY(0px);
+            box-shadow: none;
+        }
+
+        /* =============================================
+           TYPING INDICATOR
+        ============================================= */
+        #typing-indicator {
+            display: flex;
+            gap: 11px;
+            align-items: flex-start;
+            margin-top: 4px;
+            animation: msgIn 0.2s ease-out both;
+        }
+
+        #typing-indicator.hidden { display: none !important; }
+
+        .typing-bubble {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-stroke);
+            border-radius: 3px var(--r-lg) var(--r-lg) var(--r-lg);
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: var(--r-full);
+            background: var(--accent-a);
+            animation: typingBounce 1.3s ease-in-out infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.18s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.36s; }
+
+        @keyframes typingBounce {
+            0%, 100% { transform: translateY(0);    opacity: 0.35; }
+            45%       { transform: translateY(-6px); opacity: 1;    }
+        }
+
+        /* =============================================
+           CHAT FOOTER
+        ============================================= */
+        .chat-footer {
+            padding: 8px 24px 20px;
+            flex-shrink: 0;
+        }
+
+        /* Quick action chips */
+        .quick-chips {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+            margin-bottom: 11px;
+        }
+
+        .quick-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 13px;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-stroke);
+            border-radius: var(--r-full);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-md);
+            white-space: nowrap;
+            transition:
+                background 0.18s ease,
+                border-color 0.18s ease,
+                color 0.18s ease,
+                transform 0.14s ease;
+            user-select: none;
+        }
+
+        .quick-chip:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.28);
+            color: var(--text-hi);
+            transform: translateY(-1px);
+        }
+
+        .quick-chip:active {
+            transform: translateY(0);
+        }
+
+        /* Input bar — premium card layout */
+        .input-bar {
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.045);
+            border: 1px solid var(--glass-stroke);
+            border-radius: var(--r-lg);
+            overflow: hidden;
+            transition:
+                border-color 0.22s ease,
+                box-shadow   0.22s ease;
+        }
+
+        .input-bar:focus-within {
+            border-color: rgba(99, 102, 241, 0.45);
+            box-shadow:
+                0 0 0 3px rgba(99, 102, 241, 0.09),
+                0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Textarea zone */
+        .input-textarea-wrap {
+            padding: 14px 18px 6px;
+        }
+
+        #message-input {
+            display: block;
+            width: 100%;
+            background: transparent;
+            resize: none;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-hi);
+            min-height: 52px;
+            max-height: 140px;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        #message-input::-webkit-scrollbar { display: none; }
+
+        #message-input::placeholder {
+            color: var(--text-lo);
+            font-size: 14px;
+        }
+
+        /* Action row — sits at bottom of the card */
+        .input-action-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px 10px 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-left-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .input-right-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Char counter */
+        .char-counter {
+            font-size: 10.5px;
+            color: var(--text-lo);
+            font-variant-numeric: tabular-nums;
+            min-width: 28px;
+            text-align: right;
+        }
+
+        .char-counter.near-limit { color: var(--accent-amber); }
+
+        /* Voice button */
+        #voice-btn {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--r-sm);
+            color: var(--text-lo);
+            transition:
+                background    0.18s ease,
+                border-color  0.18s ease,
+                color         0.18s ease;
+        }
+
+        #voice-btn:hover {
+            background:   var(--glass-fill);
+            border-color: var(--glass-stroke);
+            color: var(--text-md);
+        }
+
+        /* Send button */
+        #send-btn {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 0 16px;
+            height: 36px;
+            background: var(--grad-cta);
+            border-radius: var(--r-sm);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: var(--font);
+            letter-spacing: 0.01em;
+            box-shadow: 0 3px 14px rgba(99, 102, 241, 0.38);
+            transition:
+                transform    0.14s ease,
+                box-shadow   0.18s ease,
+                opacity      0.18s ease;
+            white-space: nowrap;
+        }
+
+        #send-btn:hover:not(:disabled) {
+            transform:  translateY(-1px);
+            box-shadow: 0 6px 22px rgba(99, 102, 241, 0.52);
+        }
+
+        #send-btn:active:not(:disabled) {
+            transform:  translateY(0);
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        #send-btn:disabled {
+            opacity:    0.32;
+            cursor:     not-allowed;
+            box-shadow: none;
+        }
+
+        /* Disclaimer */
+        .input-disclaimer {
+            text-align: center;
+            font-size: 10px;
+            color: var(--text-lo);
+            margin-top: 9px;
+            line-height: 1.5;
+        }
+
+        .grad-text {
+            background: var(--grad-text);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+
+        /* =============================================
+           RESPONSIVE — MOBILE (≤ 768px)
+        ============================================= */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+
+            .chat-header  { padding: 12px 16px; }
+            .chat-body    { padding: 18px 16px 10px; }
+            .chat-footer  { padding: 6px 16px 18px; }
+
+            .msg { max-width: 88%; }
+
+            .quick-chips {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 4px;
+                scrollbar-width: none;
+            }
+            .quick-chips::-webkit-scrollbar { display: none; }
+
+            .ai-powered-badge { display: none; }
+        }
+
+        /* =============================================
+           FOCUS ACCESSIBILITY
+        ============================================= */
+        :focus-visible {
+            outline: 2px solid rgba(99, 102, 241, 0.6);
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; }
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- =============================================
+     AMBIENT BACKGROUND (decorative)
+============================================= -->
+<div class="app-ambient" aria-hidden="true"></div>
+
+<!-- =============================================
+     APP SHELL
+============================================= -->
+<div class="app">
+
+    <!-- =========================================
+         SIDEBAR — Business Information Panel
+    ========================================= -->
+    <aside class="sidebar" role="complementary" aria-label="Practice information">
+        <div class="sidebar-inner">
+
+            <!-- Company Brand -->
+            <div class="sb-brand">
+                <div class="sb-logo" aria-hidden="true">🌐</div>
+                <div class="sb-brand-text">
+                    <div class="sb-company-name">VisaPath Consultants</div>
+                    <div class="sb-city">📍 Chandigarh, India</div>
+                </div>
+            </div>
+
+            <!-- AI Receptionist Card -->
+            <div class="sb-ai-card">
+                <div class="sb-section-eyebrow">AI Receptionist</div>
+                <div class="sb-ai-profile">
+                    <div class="sb-ai-avatar" aria-hidden="true">
+                        <div class="sb-ai-avatar-img">🤖</div>
+                        <div class="sb-ai-avatar-dot"></div>
+                    </div>
+                    <div>
+                        <div class="sb-ai-name">Aria</div>
+                        <div class="sb-ai-role">Immigration Assistant</div>
+                    </div>
+                </div>
+                <div class="sb-online-pill">
+                    <span class="pulse-dot" aria-hidden="true"></span>
+                    Available 24 / 7
+                </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="sb-section">
+                <div class="sb-section-eyebrow">Contact</div>
+                <div class="sb-info-row">
+                    <span class="sb-info-icon" aria-hidden="true">📞</span>
+                    <div class="sb-info-body">
+                        <div class="sb-info-label">Phone</div>
+                        <div class="sb-info-value">+91 98765 43210</div>
+                    </div>
+                </div>
+                <div class="sb-info-row">
+                    <span class="sb-info-icon" aria-hidden="true">✉️</span>
+                    <div class="sb-info-body">
+                        <div class="sb-info-label">Email</div>
+                        <div class="sb-info-value">info@visapath.in</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Office Hours -->
+            <div class="sb-section">
+                <div class="sb-section-eyebrow">Office Hours</div>
+                <div class="sb-info-row">
+                    <span class="sb-info-icon" aria-hidden="true">🕘</span>
+                    <div class="sb-info-body">
+                        <div class="sb-info-label">Monday – Saturday</div>
+                        <div class="sb-info-value">9:00 AM – 7:00 PM IST</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reputation -->
+            <div class="sb-section">
+                <div class="sb-section-eyebrow">Reputation</div>
+                <div class="sb-info-row">
+                    <span class="sb-info-icon" aria-hidden="true">⭐</span>
+                    <div class="sb-info-body">
+                        <div class="sb-info-label">Google Rating</div>
+                        <div class="sb-rating" role="img" aria-label="4.8 out of 5 stars">
+                            <span class="star-char" aria-hidden="true">★★★★★</span>
+                            <span class="sb-rating-score">4.8</span>
+                            <span class="sb-rating-count">(230+ reviews)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sb-info-row">
+                    <span class="sb-info-icon" aria-hidden="true">🏆</span>
+                    <div class="sb-info-body">
+                        <div class="sb-info-label">Experience</div>
+                        <div class="sb-info-value">12 Years in Immigration</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visa Services -->
+            <div class="sb-section">
+                <div class="sb-section-eyebrow">Visa Services</div>
+                <div class="sb-visa-tags" role="list">
+                    <span class="sb-visa-tag" role="listitem">🇨🇦 Canada PR</span>
+                    <span class="sb-visa-tag" role="listitem">🇦🇺 Australia</span>
+                    <span class="sb-visa-tag" role="listitem">🇬🇧 UK Visa</span>
+                    <span class="sb-visa-tag" role="listitem">🇺🇸 USA Visa</span>
+                    <span class="sb-visa-tag" role="listitem">🎓 Student</span>
+                    <span class="sb-visa-tag" role="listitem">💼 Work Visa</span>
+                    <span class="sb-visa-tag" role="listitem">✈️ Visitor</span>
+                </div>
+            </div>
+
+        </div><!-- /.sidebar-inner -->
+    </aside><!-- /.sidebar -->
+
+    <!-- =========================================
+         MAIN CHAT AREA
+    ========================================= -->
+    <main class="chat-main">
+
+        <!-- Chat Header -->
+        <header class="chat-header">
+            <div class="header-ai">
+
+                <!-- ★ Signature: Rotating Conic-Gradient Ring Avatar ★ -->
+                <div class="avatar-ring-wrap" aria-hidden="true">
+                    <div class="avatar-ring"></div>
+                    <div class="avatar-ring-bg"></div>
+                    <div class="avatar-face">🤖</div>
+                </div>
+
+                <div class="header-ai-meta">
+                    <div class="header-ai-name">
+                        Aria
+                        <!-- Verified checkmark -->
+                        <span class="verified-icon" aria-label="Verified AI">
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                                <circle cx="7.5" cy="7.5" r="7.5" fill="#6366F1"/>
+                                <path d="M4.5 7.5L6.5 9.5L10.5 5.5"
+                                      stroke="white" stroke-width="1.4"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    </div>
+                    <div class="header-ai-status" aria-label="Online status">
+                        <span class="pulse-dot" aria-hidden="true"></span>
+                        Online — Responding instantly
+                    </div>
+                </div>
+
+            </div><!-- /.header-ai -->
+
+            <div class="header-controls">
+                <div class="ai-powered-badge" aria-label="Powered by AI">
+                    <div class="badge-orb" aria-hidden="true"></div>
+                    Powered by AI
+                </div>
+                <!-- Minimize / embed toggle — attached by embed script -->
+                <button class="icon-btn" id="minimize-btn"
+                        aria-label="Minimize chat" title="Minimize">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M2 12L12 2M2 2H12V12"
+                              stroke="currentColor" stroke-width="1.6"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header><!-- /.chat-header -->
+
+        <!-- Chat Body — Scrollable message log -->
+        <div class="chat-body" id="chat-body"
+             role="log" aria-live="polite" aria-label="Conversation">
+
+            <!-- =========================================
+                 MESSAGES CONTAINER
+                 chat.js appends new .msg elements here.
+            ========================================= -->
+            <div id="chat-messages">
+
+                <!-- ─── AI Welcome Message ───
+                     One message only. Never replaces or removes this.
+                     chat.js appends below this. ─── -->
+                <article class="msg msg-ai" aria-label="Message from Aria">
+                    <div class="msg-avatar" aria-hidden="true">🤖</div>
+                    <div class="msg-inner">
+                        <div class="msg-sender-label">Aria · AI Receptionist</div>
+                        <div class="msg-bubble" id="welcome-bubble">
+                            <p>👋 Hello! I'm <strong>Aria</strong>, your AI Immigration Receptionist
+                               at <strong>VisaPath Consultants</strong>.</p>
+                            <br>
+                            <p>I'm here to guide you through your visa journey — from eligibility
+                               to application. Here's how I can help:</p>
+
+                            <div class="welcome-pills" id="welcome-pills" role="group" aria-label="Select a topic">
+                                <button class="welcome-pill" data-message="Tell me about Canada Visa and PR process">🇨🇦 Canada Visa &amp; PR</button>
+                                <button class="welcome-pill" data-message="Tell me about Australia Visa options">🇦🇺 Australia Visa</button>
+                                <button class="welcome-pill" data-message="What are the UK Visa requirements?">🇬🇧 UK Visa</button>
+                                <button class="welcome-pill" data-message="Tell me about USA Visa options">🇺🇸 USA Visa</button>
+                                <button class="welcome-pill" data-message="I want to apply for a Student Visa. What are the steps?">🎓 Student Visa</button>
+                                <button class="welcome-pill" data-message="Tell me about Work Visa requirements">💼 Work Visa</button>
+                                <button class="welcome-pill" data-message="What are the requirements for a Visitor Visa?">✈️ Visitor Visa</button>
+                                <button class="welcome-pill" data-message="Can you check my visa eligibility?">✅ Eligibility Check</button>
+                                <button class="welcome-pill" data-message="I'd like to book a consultation with a visa expert">📅 Book Consultation</button>
+                            </div>
+                            <br>
+                            <p>What can I help you with today? 😊</p>
+                        </div>
+                        <div class="msg-timestamp" id="welcome-time" aria-label="Message time"></div>
+                    </div>
+                </article>
+
+            </div><!-- /#chat-messages -->
+
+            <!-- Typing Indicator — chat.js toggles .hidden -->
+            <div id="typing-indicator" class="hidden"
+                 role="status" aria-label="Aria is typing">
+                <div class="msg-avatar" aria-hidden="true">🤖</div>
+                <div class="typing-bubble" aria-hidden="true">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
+            </div>
+
+        </div><!-- /.chat-body -->
+
+        <!-- Chat Footer -->
+        <div class="chat-footer">
+
+            <!-- Quick Action Chips — chat.js can hide/show on demand -->
+            <div class="quick-chips" id="quick-chips"
+                 role="group" aria-label="Quick actions">
+                <button class="quick-chip"
+                        data-message="Tell me about the Canada PR process"
+                        aria-label="Canada PR">
+                    🇨🇦 Canada PR
+                </button>
+                <button class="quick-chip"
+                        data-message="I want to apply for a Student Visa. What are the steps?"
+                        aria-label="Student Visa">
+                    🎓 Student Visa
+                </button>
+                <button class="quick-chip"
+                        data-message="What documents are required for a visa application?"
+                        aria-label="Required Documents">
+                    📄 Documents
+                </button>
+                <button class="quick-chip"
+                        data-message="Can you check my visa eligibility?"
+                        aria-label="Eligibility Check">
+                    ⚡ Eligibility Check
+                </button>
+                <button class="quick-chip"
+                        data-message="What are the visa fees and processing times?"
+                        aria-label="Visa Fees">
+                    💰 Visa Fees
+                </button>
+                <button class="quick-chip"
+                        data-message="I'd like to book a consultation with a visa expert"
+                        aria-label="Book Consultation">
+                    📅 Book Consultation
+                </button>
+            </div><!-- /.quick-chips -->
+
+            <!-- Input Bar — card layout: textarea zone + action row -->
+            <div class="input-bar" id="input-area">
+
+                <!-- Textarea zone -->
+                <div class="input-textarea-wrap">
+                    <textarea
+                        id="message-input"
+                        rows="2"
+                        maxlength="1000"
+                        placeholder="Ask about visa eligibility, documents, fees…"
+                        aria-label="Type your message"
+                        autocomplete="off"
+                        spellcheck="true"
+                    ></textarea>
+                </div>
+
+                <!-- Action row -->
+                <div class="input-action-row">
+                    <div class="input-left-actions">
+                        <!-- Voice Button — chat.js / embed attaches speech-to-text -->
+                        <button id="voice-btn"
+                                aria-label="Voice input (coming soon)"
+                                title="Voice input">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                 aria-hidden="true">
+                                <rect x="9" y="2" width="6" height="12"
+                                      rx="3" stroke="currentColor" stroke-width="1.8"/>
+                                <path d="M5 10a7 7 0 0 0 14 0" stroke="currentColor"
+                                      stroke-width="1.8" stroke-linecap="round"/>
+                                <line x1="12" y1="19" x2="12" y2="22"
+                                      stroke="currentColor" stroke-width="1.8"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="input-right-actions">
+                        <span class="char-counter" id="char-counter" aria-live="polite" aria-label="Characters remaining"></span>
+                        <!-- Send Button -->
+                        <button id="send-btn"
+                                aria-label="Send message"
+                                title="Send"
+                                disabled>
+                            Send
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                 aria-hidden="true">
+                                <path d="M22 2L11 13" stroke="white" stroke-width="2.2"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white"
+                                      stroke-width="2.2" stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+            </div><!-- /.input-bar -->
+
+            <!-- Disclaimer -->
+            <p class="input-disclaimer" role="note">
+                AI responses are informational only. &nbsp;
+                <span class="grad-text">Powered by Auren.ai</span>
+                &nbsp; · &nbsp; Consult our experts for binding advice.
+            </p>
+
+        </div><!-- /.chat-footer -->
+
+    </main><!-- /.chat-main -->
+
+</div><!-- /.app -->
+
+<!-- =============================================
+     UI SCRIPT
+     Pure UI logic only — no AI, no API calls.
+     chat.js attaches to window.VisaBot.* for
+     all intelligence and conversation handling.
+============================================= -->
+<script>
+(function () {
+    'use strict';
+
+    // ── Timestamp ──────────────────────────────
+    function timeNow() {
+        return new Date().toLocaleTimeString('en-IN', {
+            hour:   '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        });
+    }
+
+    // Set welcome message timestamp on load
+    document.getElementById('welcome-time').textContent = 'Today, ' + timeNow();
+
+    // ── DOM references ─────────────────────────
+    const chatBody     = document.getElementById('chat-body');
+    const messagesEl   = document.getElementById('chat-messages');
+    const inputEl      = document.getElementById('message-input');
+    const sendBtn      = document.getElementById('send-btn');
+    const typingEl     = document.getElementById('typing-indicator');
+    const quickChips   = document.getElementById('quick-chips');
+    const charCounter  = document.getElementById('char-counter');
+
+    // ── Scroll to bottom ──────────────────────
+    function scrollToBottom(smooth) {
+        chatBody.scrollTo({
+            top:      chatBody.scrollHeight,
+            behavior: smooth === false ? 'instant' : 'smooth',
+        });
+    }
+
+    // ── Auto-resize textarea ──────────────────
+    function resizeInput() {
+        inputEl.style.height = 'auto';
+        inputEl.style.height = Math.min(inputEl.scrollHeight, 140) + 'px';
+    }
+
+    // ── Update char counter ───────────────────
+    function updateCounter() {
+        const len  = inputEl.value.length;
+        const max  = parseInt(inputEl.getAttribute('maxlength'), 10) || 1000;
+        const left = max - len;
+        if (left <= 200) {
+            charCounter.textContent = left;
+            charCounter.classList.toggle('near-limit', left <= 80);
+        } else {
+            charCounter.textContent = '';
+        }
+    }
+
+    // ── Escape HTML (prevent XSS) ─────────────
+    function esc(str) {
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(str));
+        return d.innerHTML;
+    }
+
+    // ── Populate input from any clickable source ──
+    function populateInput(text) {
+        inputEl.value = text;
+        inputEl.dispatchEvent(new Event('input'));
+        inputEl.focus();
+        resizeInput();
+        // Scroll chat body so input is in view on mobile
+        setTimeout(function () {
+            inputEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 80);
+    }
+
+    // ── Enable / disable send button ─────────
+    inputEl.addEventListener('input', function () {
+        sendBtn.disabled = this.value.trim().length === 0;
+        resizeInput();
+        updateCounter();
+    });
+
+    // Enter to send (Shift+Enter = new line)
+    inputEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!sendBtn.disabled) sendBtn.click();
+        }
+    });
+
+    // ── Welcome pill → populate input ─────────
+    document.getElementById('welcome-pills').querySelectorAll('.welcome-pill').forEach(function (pill) {
+        pill.addEventListener('click', function () {
+            populateInput(this.dataset.message || this.textContent.trim());
+        });
+    });
+
+    // ── Quick chip → populate input ───────────
+    quickChips.querySelectorAll('.quick-chip').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            populateInput(this.dataset.message || this.textContent.trim());
+        });
+    });
+
+    // ── Send button ───────────────────────────
+    sendBtn.addEventListener('click', function () {
+        const text = inputEl.value.trim();
+        if (!text) return;
+
+        // Notify chat.js (or any listener) via custom event
+        const event = new CustomEvent('visabot:send', {
+            detail:  { message: text },
+            bubbles: true,
+        });
+        document.dispatchEvent(event);
+
+        // Fallback: render user bubble if chat.js hasn't claimed control
+        if (!window._visabotHandled) {
+            appendUserMessage(text);
+        }
+
+        // Clear input
+        inputEl.value     = '';
+        inputEl.style.height = 'auto';
+        sendBtn.disabled  = true;
+        inputEl.focus();
+    });
+
+    // ── Minimize button ───────────────────────
+    document.getElementById('minimize-btn').addEventListener('click', function () {
+        document.dispatchEvent(new CustomEvent('visabot:minimize', { bubbles: true }));
+    });
+
+    // ─────────────────────────────────────────
+    // PUBLIC API — exposed for chat.js
+    // ─────────────────────────────────────────
+
+    /**
+     * Append a user message bubble.
+     * @param {string} text — plain text (will be escaped)
+     */
+    function appendUserMessage(text) {
+        const el = document.createElement('article');
+        el.className = 'msg msg-user';
+        el.setAttribute('aria-label', 'Your message');
+        el.innerHTML =
+            '<div class="msg-inner">' +
+                '<div class="msg-sender-label">You</div>' +
+                '<div class="msg-bubble">' + esc(text) + '</div>' +
+                '<div class="msg-timestamp">' + timeNow() + '</div>' +
+            '</div>';
+        messagesEl.appendChild(el);
+        scrollToBottom();
+    }
+
+    /**
+     * Append an AI response bubble.
+     * @param {string} html — HTML string (sanitize before passing if user-influenced)
+     */
+    function appendAIMessage(html) {
+        const el = document.createElement('article');
+        el.className = 'msg msg-ai';
+        el.setAttribute('aria-label', 'Message from Aria');
+        el.innerHTML =
+            '<div class="msg-avatar" aria-hidden="true">🤖</div>' +
+            '<div class="msg-inner">' +
+                '<div class="msg-sender-label">Aria · AI Receptionist</div>' +
+                '<div class="msg-bubble">' + html + '</div>' +
+                '<div class="msg-timestamp">' + timeNow() + '</div>' +
+            '</div>';
+        messagesEl.appendChild(el);
+        scrollToBottom();
+    }
+
+    /**
+     * Show or hide the typing indicator.
+     * @param {boolean} visible
+     */
+    function setTyping(visible) {
+        typingEl.classList.toggle('hidden', !visible);
+        if (visible) scrollToBottom();
+    }
+
+    /**
+     * Show or hide the quick chips.
+     * @param {boolean} visible
+     */
+    function setChipsVisible(visible) {
+        quickChips.style.display = visible ? 'flex' : 'none';
+    }
+
+    /**
+     * Disable the input (e.g. while AI is responding).
+     * @param {boolean} disabled
+     */
+    function setInputDisabled(disabled) {
+        inputEl.disabled  = disabled;
+        sendBtn.disabled  = disabled || inputEl.value.trim().length === 0;
+        inputEl.placeholder = disabled
+            ? 'Aria is responding…'
+            : 'Ask about visa eligibility, documents, fees…';
+    }
+
+    // Expose everything chat.js needs
+    window.VisaBot = {
+        appendUserMessage,
+        appendAIMessage,
+        setTyping,
+        setChipsVisible,
+        setInputDisabled,
+        scrollToBottom,
+        timeNow,
+    };
+
+    // Signal that the UI is ready
+    document.dispatchEvent(new CustomEvent('visabot:ready', { bubbles: true }));
+
+}());
+</script>
+
+<!--
+    =============================================
+    CHAT.JS INTEGRATION NOTES
+    =============================================
+    Attach your chat.js by adding:
+      <script src="chat.js" defer></script>
+    just before </body>.
+
+    Available hooks from window.VisaBot:
+      .appendUserMessage(text)  — render user bubble
+      .appendAIMessage(html)    — render AI bubble
+      .setTyping(bool)          — show/hide typing dots
+      .setChipsVisible(bool)    — show/hide quick chips
+      .setInputDisabled(bool)   — lock input while AI responds
+      .scrollToBottom()         — scroll chat to latest message
+      .timeNow()                — formatted current time string
+
+    DOM IDs for direct access:
+      #chat-messages            — messages append target
+      #message-input            — textarea
+      #send-btn                 — send trigger
+      #voice-btn                — voice input hook
+      #typing-indicator         — toggle .hidden class
+      #quick-chips              — chips container
+      #chat-body                — scroll container
+      #minimize-btn             — widget minimize hook
+
+    Custom events fired on document:
+      visabot:ready             — UI initialized
+      visabot:send  → detail.message   — user hit send
+      visabot:minimize          — minimize button pressed
+
+    Set window._visabotHandled = true in chat.js
+    to prevent the fallback UI-only bubble from firing.
+    =============================================
+-->
+
+</body>
+</html>

@@ -118,7 +118,7 @@ const contents = buildGeminiContents(req.body.history, sanitizedMessage);
 
 const requestBody = {
 contents,
-systemInstruction: {
+system_Instruction: {
 parts: [{ text: SYSTEM_PROMPT }]
 },
 generationConfig: {

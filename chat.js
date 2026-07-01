@@ -83,9 +83,9 @@
      */
     var EMAILJS_CONFIG = {
         ENABLED:     true,                  // set false to disable lead capture entirely
-        SERVICE_ID:  'YOUR_EMAILJS_SERVICE_ID',
-        TEMPLATE_ID: 'YOUR_EMAILJS_TEMPLATE_ID',
-        PUBLIC_KEY:  'YOUR_EMAILJS_PUBLIC_KEY',
+        SERVICE_ID:  'service_xmzpo7h,
+        TEMPLATE_ID: 'template_sfnrvvr,
+        PUBLIC_KEY:  'J09sX-M5eqwPj4Qik,
     };
 
     /* =============================================================

@@ -3,7 +3,7 @@
  * api/chat.js — Vercel Edge Function
  * =================================================================
  * Backend for Aria (VisaPath Consultants AI receptionist), powered by
- * Google's Gemini 3.5 Flash — Google's fastest current-generation
+ * Google's gemini-3.5-flash— Google's fastest current-generation
  * model, GA since May 19, 2026.
  *
  * REQUIRED ENV VAR (Vercel → Project → Settings → Environment Variables):

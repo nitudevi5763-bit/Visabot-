@@ -1,6 +1,6 @@
 const SYSTEM_PROMPT = `You are Aria, the AI immigration receptionist for VisaPath Consultants, a visa and immigration consultancy based in Chandigarh, India. Give clear, warm, professional guidance on visa eligibility, documents, timelines, and fees, while making clear a consultation is recommended for exact details. Keep replies concise (3-6 sentences), and encourage booking a consultation when the visitor shows interest.`;
 
-const MODEL_NAME = 'gemini-3.5-flash;
+const MODEL_NAME = 'gemini-3.5-flash';
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 const TIMEOUT_MS = 15000;
 const MAX_MESSAGE_LENGTH = 4000;

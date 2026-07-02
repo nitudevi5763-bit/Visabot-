@@ -1,196 +1,188 @@
-const SYSTEM_PROMPT = `You are an elite, highly intelligent, and hyper-efficient AI assistant.  Your task is to provide direct, context-aware, and precise answers without unnecessary filler or fluff.  Adopt a professional yet engaging persona, prioritizing accuracy and speed above all else.  Analyze the conversation history carefully to maintain flawless continuity and execute complex logical tasks instantly.`;
+const SYSTEM_PROMPT = `You are Aria, the AI immigration receptionist for VisaPath Consultants, a visa and immigration consultancy based in Chandigarh, India. Give clear, warm, professional guidance on visa eligibility, documents, timelines, and fees, while making clear a consultation is recommended for exact details. Keep replies concise (3-6 sentences), and encourage booking a consultation when the visitor shows interest.`;
 
-const MODEL_NAME = 'gemini-3.5-flash';
+const MODEL_NAME = 'gemini-3.5-flash;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 const TIMEOUT_MS = 15000;
 const MAX_MESSAGE_LENGTH = 4000;
 const MAX_HISTORY_ENTRIES = 20;
 
 function sendJson(res, statusCode, data) {
-res.setHeader('Content-Type', 'application/json');
-res.status(statusCode).json(data);
+  res.setHeader('Content-Type', 'application/json');
+  res.status(statusCode).json(data);
 }
 
 function sendError(res, statusCode, message) {
-sendJson(res, statusCode, { success: false, error: message });
+  sendJson(res, statusCode, { success: false, error: message });
 }
 
 function validatePayload(body) {
-if (!body || typeof body !== 'object') {
-return { valid: false, error: 'Invalid or missing JSON body' };
-}
-
-const { message, history } = body;
-
-if (message === undefined || message === null) {
-return { valid: false, error: 'The "message" field is required' };
-}
-
-if (typeof message !== 'string') {
-return { valid: false, error: 'The "message" field must be a string' };
-}
-
-const trimmedMessage = message.trim();
-if (trimmedMessage.length === 0) {
-return { valid: false, error: 'The "message" field cannot be empty' };
-}
-
-if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
-return { valid: false, error: `The "message" field exceeds the maximum limit of ${MAX_MESSAGE_LENGTH} characters` };
-}
-
-if (history !== undefined) {
-if (!Array.isArray(history)) {
-return { valid: false, error: 'The "history" field must be an array' };
-}
-
-```
-if (history.length > MAX_HISTORY_ENTRIES) {
-  return { valid: false, error: `The "history" field cannot exceed ${MAX_HISTORY_ENTRIES} entries` };
-}
-
-for (let i = 0; i < history.length; i++) {
-  const item = history[i];
-  if (!item || typeof item !== 'object') {
-    return { valid: false, error: `History item at index ${i} must be an object` };
+  if (!body || typeof body !== 'object') {
+    return { valid: false, error: 'Invalid or missing JSON body' };
   }
-  if (item.role !== 'user' && item.role !== 'assistant') {
-    return { valid: false, error: `History item at index ${i} must have a role of either "user" or "assistant"` };
-  }
-  if (typeof item.content !== 'string' || item.content.trim() === '') {
-    return { valid: false, error: `History item at index ${i} must contain a valid non-empty string in "content"` };
-  }
-  if (item.content.length > MAX_MESSAGE_LENGTH) {
-    return { valid: false, error: `History item at index ${i} content exceeds the maximum limit of ${MAX_MESSAGE_LENGTH} characters` };
-  }
-}
 
-```
+  const { message, history } = body;
 
-}
+  if (message === undefined || message === null) {
+    return { valid: false, error: 'The "message" field is required' };
+  }
 
-return { valid: true, sanitizedMessage: trimmedMessage };
+  if (typeof message !== 'string') {
+    return { valid: false, error: 'The "message" field must be a string' };
+  }
+
+  const trimmedMessage = message.trim();
+  if (trimmedMessage.length === 0) {
+    return { valid: false, error: 'The "message" field cannot be empty' };
+  }
+
+  if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+    return { valid: false, error: `The "message" field exceeds the maximum limit of ${MAX_MESSAGE_LENGTH} characters` };
+  }
+
+  if (history !== undefined) {
+    if (!Array.isArray(history)) {
+      return { valid: false, error: 'The "history" field must be an array' };
+    }
+
+    if (history.length > MAX_HISTORY_ENTRIES) {
+      return { valid: false, error: `The "history" field cannot exceed ${MAX_HISTORY_ENTRIES} entries` };
+    }
+
+    for (let i = 0; i < history.length; i++) {
+      const item = history[i];
+      if (!item || typeof item !== 'object') {
+        return { valid: false, error: `History item at index ${i} must be an object` };
+      }
+      if (item.role !== 'user' && item.role !== 'assistant') {
+        return { valid: false, error: `History item at index ${i} must have a role of either "user" or "assistant"` };
+      }
+      if (typeof item.content !== 'string' || item.content.trim() === '') {
+        return { valid: false, error: `History item at index ${i} must contain a valid non-empty string in "content"` };
+      }
+      if (item.content.length > MAX_MESSAGE_LENGTH) {
+        return { valid: false, error: `History item at index ${i} content exceeds the maximum limit of ${MAX_MESSAGE_LENGTH} characters` };
+      }
+    }
+  }
+
+  return { valid: true, sanitizedMessage: trimmedMessage };
 }
 
 function buildGeminiContents(history, currentMessage) {
-const contents = [];
+  const contents = [];
 
-if (history && history.length > 0) {
-history.forEach(item => {
-const apiRole = item.role === 'assistant' ? 'model' : 'user';
-contents.push({
-role: apiRole,
-parts: [{ text: item.content }]
-});
-});
-}
+  if (history && history.length > 0) {
+    history.forEach(item => {
+      const apiRole = item.role === 'assistant' ? 'model' : 'user';
+      contents.push({
+        role: apiRole,
+        parts: [{ text: item.content }]
+      });
+    });
+  }
 
-contents.push({
-role: 'user',
-parts: [{ text: currentMessage }]
-});
+  contents.push({
+    role: 'user',
+    parts: [{ text: currentMessage }]
+  });
 
-return contents;
+  return contents;
 }
 
 export default async function handler(req, res) {
-if (req.method !== 'POST') {
-res.setHeader('Allow', 'POST');
-return sendError(res, 405, 'Method Not Allowed');
-}
-
-const contentType = req.headers['content-type'] || '';
-if (!contentType.includes('application/json')) {
-return sendError(res, 400, 'Unsupported Media Type. Content-Type must be application/json');
-}
-
-const { valid, error, sanitizedMessage } = validatePayload(req.body);
-if (!valid) {
-return sendError(res, 400, error);
-}
-
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-return sendError(res, 500, 'API key missing from server environment configurations');
-}
-
-const contents = buildGeminiContents(req.body.history, sanitizedMessage);
-
-const requestBody = {
-contents,
-system_Instruction: {
-parts: [{ text: SYSTEM_PROMPT }]
-},
-generationConfig: {
-temperature: 0.5,
-topP: 0.95,
-topK: 40,
-maxOutputTokens: 1024
-}
-};
-
-const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-try {
-const apiResponse = await fetch(`${API_URL}?key=${apiKey}`, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify(requestBody),
-signal: controller.signal
-});
-
-```
-if (!apiResponse.ok) {
-  return sendError(res, 502, 'AI service is temporarily unavailable.');
-}
-
-const data = await apiResponse.json();
-
-if (!data || !data.candidates || data.candidates.length === 0) {
-  if (data.promptFeedback?.blockReason) {
-    return sendError(res, 400, `Content blocked by safety policies: ${data.promptFeedback.blockReason}`);
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return sendError(res, 405, 'Method Not Allowed');
   }
-  return sendError(res, 502, 'AI service is temporarily unavailable.');
-}
 
-const firstCandidate = data.candidates[0];
-
-if (firstCandidate.finishReason && firstCandidate.finishReason !== 'STOP') {
-  if (firstCandidate.finishReason === 'SAFETY' || firstCandidate.finishReason === 'RECITATION') {
-    return sendError(res, 400, `Generation finished prematurely due to: ${firstCandidate.finishReason}`);
+  const contentType = req.headers['content-type'] || '';
+  if (!contentType.includes('application/json')) {
+    return sendError(res, 400, 'Unsupported Media Type. Content-Type must be application/json');
   }
-}
 
-const parts = firstCandidate.content?.parts;
-if (!Array.isArray(parts) || parts.length === 0) {
-  return sendError(res, 502, 'AI service is temporarily unavailable.');
-}
+  const { valid, error, sanitizedMessage } = validatePayload(req.body);
+  if (!valid) {
+    return sendError(res, 400, error);
+  }
 
-const replyText = parts.map(part => part.text || '').join('').trim();
-if (replyText.length === 0) {
-  return sendError(res, 502, 'AI service is temporarily unavailable.');
-}
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return sendError(res, 500, 'API key missing from server environment configuration');
+  }
 
-return sendJson(res, 200, {
-  success: true,
-  reply: replyText
-});
+  const contents = buildGeminiContents(req.body.history, sanitizedMessage);
 
-```
+  const requestBody = {
+    contents,
+    system_instruction: {
+      parts: [{ text: SYSTEM_PROMPT }]
+    },
+    generationConfig: {
+      temperature: 0.5,
+      topP: 0.95,
+      topK: 40,
+      maxOutputTokens: 1024
+    }
+  };
 
-} catch (err) {
-if (err.name === 'AbortError') {
-return sendError(res, 504, 'Gateway Timeout. Upstream server took too long to reply');
-}
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-```
-console.error(err);
-return sendError(res, 500, 'An internal error occurred while processing your request');
+  try {
+    const apiResponse = await fetch(`${API_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal
+    });
 
-```
+    if (!apiResponse.ok) {
+      const errText = await apiResponse.text().catch(() => '');
+      console.error('[api/chat] Gemini API error:', apiResponse.status, errText.slice(0, 500));
+      return sendError(res, 502, 'AI service is temporarily unavailable.');
+    }
 
-} finally {
-clearTimeout(timeoutId);
-}
+    const data = await apiResponse.json();
+
+    if (!data || !data.candidates || data.candidates.length === 0) {
+      if (data.promptFeedback && data.promptFeedback.blockReason) {
+        return sendError(res, 400, `Content blocked by safety policies: ${data.promptFeedback.blockReason}`);
+      }
+      return sendError(res, 502, 'AI service is temporarily unavailable.');
+    }
+
+    const firstCandidate = data.candidates[0];
+
+    if (firstCandidate.finishReason && firstCandidate.finishReason !== 'STOP') {
+      if (firstCandidate.finishReason === 'SAFETY' || firstCandidate.finishReason === 'RECITATION') {
+        return sendError(res, 400, `Generation finished prematurely due to: ${firstCandidate.finishReason}`);
+      }
+    }
+
+    const parts = firstCandidate.content && firstCandidate.content.parts;
+    if (!Array.isArray(parts) || parts.length === 0) {
+      return sendError(res, 502, 'AI service is temporarily unavailable.');
+    }
+
+    const replyText = parts.map(part => part.text || '').join('').trim();
+    if (replyText.length === 0) {
+      return sendError(res, 502, 'AI service is temporarily unavailable.');
+    }
+
+    return sendJson(res, 200, {
+      success: true,
+      reply: replyText
+    });
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      return sendError(res, 504, 'Gateway Timeout. Upstream server took too long to reply');
+    }
+
+    console.error(err);
+    return sendError(res, 500, 'An internal error occurred while processing your request');
+
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }

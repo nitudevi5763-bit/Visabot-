@@ -681,6 +681,77 @@
 
         .msg-user .msg-timestamp { text-align: right; }
 
+        /* =============================================
+   BOOKING CONFIRMATION CARD (high-tech green)
+============================================= */
+.booking-confirm {
+    display: flex;
+    align-self: flex-start;
+    gap: 12px;
+    max-width: 88%;
+    padding: 14px 16px;
+    margin-top: 2px;
+    border-radius: var(--r-lg);
+    background: linear-gradient(135deg, rgba(16,185,129,0.14), rgba(34,211,238,0.07));
+    border: 1px solid rgba(16,185,129,0.45);
+    position: relative;
+    overflow: hidden;
+    animation: msgIn 0.3s cubic-bezier(0.22,1,0.36,1) both, bookingGlow 2.6s ease-in-out infinite;
+}
+
+.booking-confirm::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(16,185,129,0.18), transparent);
+    transform: translateX(-100%);
+    animation: bookingSweep 3.2s ease-in-out infinite;
+}
+
+@keyframes bookingGlow {
+    0%, 100% { box-shadow: 0 0 16px rgba(16,185,129,0.18), inset 0 0 14px rgba(16,185,129,0.04); }
+    50%      { box-shadow: 0 0 30px rgba(16,185,129,0.38), inset 0 0 22px rgba(16,185,129,0.09); }
+}
+
+@keyframes bookingSweep {
+    0%   { transform: translateX(-100%); }
+    60%, 100% { transform: translateX(100%); }
+}
+
+.booking-confirm-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: var(--r-full);
+    background: var(--accent-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 14px rgba(16,185,129,0.55);
+    position: relative;
+    z-index: 1;
+}
+
+.booking-confirm-body {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+}
+
+.booking-confirm-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-green);
+    letter-spacing: 0.02em;
+}
+
+.booking-confirm-text {
+    margin-top: 3px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text-md);
+    overflow-wrap: break-word;
+}
         /* Welcome message service pills — clickable */
         .welcome-pills {
             display: flex;

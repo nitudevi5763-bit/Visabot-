@@ -334,10 +334,37 @@
     }
 
     /**
+     * Renders a distinct "high-tech" green confirmation card in the
+     * chat stream once a consultation/lead has actually been captured.
+     */
+    function renderBookingConfirmation(leadName) {
+        if (!dom.chatMessages) return;
+        var card = document.createElement('div');
+        card.className = 'booking-confirm';
+        card.setAttribute('role', 'status');
+        var greeting = leadName ? (', ' + leadName) : '';
+        card.innerHTML =
+            '<div class="booking-confirm-icon" aria-hidden="true">' +
+                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none">' +
+                    '<path d="M20 6L9 17l-5-5" stroke="#04140D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+                '</svg>' +
+            '</div>' +
+            '<div class="booking-confirm-body">' +
+                '<div class="booking-confirm-title">Consultation Request Received</div>' +
+                '<div class="booking-confirm-text">Thanks' + escapeHtml(greeting) + '! Our visa expert team has been notified and will reach out shortly to confirm your session.</div>' +
+            '</div>';
+        dom.chatMessages.appendChild(card);
+        if (window.VisaBot && typeof window.VisaBot.scrollToBottom === 'function') {
+            window.VisaBot.scrollToBottom(true);
+        }
+    }
+
+    /**
      * Fire-and-forget lead notification. Never throws, never blocks
      * or delays the chat send flow.
      */
-    function maybeCaptureLead(userText) {
+    function maybeCaptureLead(userText) {     
+    
         if (!EMAILJS_CONFIG.ENABLED || !leadState.emailJsReady) return;
         if (leadState.alreadyCapturedThisSession) return;
 

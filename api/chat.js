@@ -165,6 +165,10 @@ export default async function handler(req, res) {
     if (firstCandidate.finishReason && firstCandidate.finishReason !== 'STOP') {
       if (firstCandidate.finishReason === 'SAFETY' || firstCandidate.finishReason === 'RECITATION') {
         return sendError(res, 400, `Generation finished prematurely due to: ${firstCandidate.finishReason}`);
+        if (firstCandidate.finishReason === 'MAX_TOKENS') {
+        console.error('[api/chat] Response truncated by MAX_TOKENS — increase maxOutputTokens.');
+        return sendError(res, 502, 'AI service produced an incomplete response. Please try again.');
+      
       }
     }
 

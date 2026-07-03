@@ -393,6 +393,7 @@
         window.emailjs.send(EMAILJS_CONFIG.SERVICE_ID, EMAILJS_CONFIG.TEMPLATE_ID, templateParams)
             .then(function () {
                 console.info('[Aurenn] Lead notification sent successfully.');
+                renderBookingConfirmation(lead.name);
             })
             .catch(function (err) {
                 console.error('[Aurenn] EmailJS lead notification failed:', err);

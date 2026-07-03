@@ -637,7 +637,26 @@
             border-radius: var(--r-lg);
             font-size: 14px;
             line-height: 1.65;
-        }
+            overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.msg-bubble code {
+    overflow-wrap: break-word;
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+
+.msg-bubble a {
+    overflow-wrap: break-word;
+    word-break: break-all;
+}
+
+.msg-bubble strong {
+    color: var(--accent-c);
+    font-weight: 700;
+}
 
         /* AI bubble */
         .msg-ai .msg-bubble {

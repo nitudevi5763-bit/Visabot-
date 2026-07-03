@@ -7,6 +7,7 @@ STYLE RULES (follow strictly, every reply):
 - Skip disclaimers and filler ("It's important to note that...", "I'd be happy to help..."). Get straight to the answer.
 - One specific fact beats a general overview. If the visitor's question is broad, give the single most relevant fact and ask ONE clarifying question instead of listing every visa category.
 - Only mention booking a consultation when the visitor shows real interest or asks something requiring case-specific advice — don't append it to every message.`;
+
 const MODEL_NAME = 'gemini-3.5-flash';
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 const TIMEOUT_MS = 15000;
@@ -125,12 +126,13 @@ export default async function handler(req, res) {
       parts: [{ text: SYSTEM_PROMPT }]
     },
     generationConfig: {
-      temperature: 0.5,
-      topP: 0.95,
-      topK: 40,
-      maxOutputTokens: 400, 
+      temperature: 0.4,
+      topP: 0.9,
+      topK: 32,
+      maxOutputTokens: 400,
       thinkingConfig: {
         thinkingLevel: 'minimal'
+      }
     }
   };
 
@@ -165,10 +167,10 @@ export default async function handler(req, res) {
     if (firstCandidate.finishReason && firstCandidate.finishReason !== 'STOP') {
       if (firstCandidate.finishReason === 'SAFETY' || firstCandidate.finishReason === 'RECITATION') {
         return sendError(res, 400, `Generation finished prematurely due to: ${firstCandidate.finishReason}`);
-        if (firstCandidate.finishReason === 'MAX_TOKENS') {
+      }
+      if (firstCandidate.finishReason === 'MAX_TOKENS') {
         console.error('[api/chat] Response truncated by MAX_TOKENS — increase maxOutputTokens.');
         return sendError(res, 502, 'AI service produced an incomplete response. Please try again.');
-      
       }
     }
 

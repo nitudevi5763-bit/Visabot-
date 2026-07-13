@@ -380,6 +380,8 @@
             .join('\n');
 
         var templateParams = {
+            to_email:        'nitudevi5763@gmail.com',
+            business_name:   'VisaPath Consultants',
             visitor_name:    lead.name    || 'Not provided',
             visitor_email:   lead.email   || 'Not provided',
             visitor_phone:   lead.phone   || 'Not provided',

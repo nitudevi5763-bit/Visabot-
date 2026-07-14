@@ -8,7 +8,7 @@ STYLE RULES (follow strictly, every reply):
 - One specific fact beats a general overview. If the visitor's question is broad, give the single most relevant fact and ask ONE clarifying question instead of listing every visa category.
 -  Only mention booking a consultation when the visitor shows real interest or asks something requiring case-specific advice — don't append it to every message.`;
 
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = 'gemini-3.1-flash-lite';
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 const TIMEOUT_MS = 25000;
 const MAX_MESSAGE_LENGTH = 4000;

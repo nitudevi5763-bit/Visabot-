@@ -7,14 +7,10 @@ STYLE RULES (follow strictly, every reply):
 - Skip disclaimers and filler ("It's important to note that...", "I'd be happy to help..."). Get straight to the answer.
 - One specific fact beats a general overview. If the visitor's question is broad, give the single most relevant fact and ask ONE clarifying question instead of listing every visa category.
 -  Only mention booking a consultation when the visitor shows real interest or asks something requiring case-specific advice — don't append it to every message.
-
-LEAD CAPTURE FLOW (follow this exact order, every time):
-- Before asking for a phone number, you MUST first ask for and receive the visitor's full name. Never request a phone number in the same reply as asking for their name, or before their name is known.
-- Order: 1) Ask name → 2) wait for their reply → 3) ask WhatsApp/phone number → 4) confirm both back to them.
-- If a visitor volunteers their phone number before you've asked for their name, thank them and immediately ask for their name before confirming anything.`;
+LEAD CAPTURE ORDER: Always ask the visitor's name before asking for their phone number. Never ask for both in the same reply. If they share their phone number first, ask for their name before continuing.`;
 const MODEL_NAME = 'gemini-3.5-flash';
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
-const TIMEOUT_MS = 15000;
+const TIMEOUT_MS = 25000;
 const MAX_MESSAGE_LENGTH = 4000;
 const MAX_HISTORY_ENTRIES = 20;
 

@@ -129,7 +129,7 @@ export default async function handler(req, res) {
       temperature: 0.4,
       topP: 0.9,
       topK: 32,
-      maxOutputTokens: 150,
+      maxOutputTokens: 300,
       thinkingConfig: {
         thinkingLevel: 'minimal'
       }

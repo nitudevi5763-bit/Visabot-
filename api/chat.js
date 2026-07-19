@@ -7,7 +7,6 @@ STYLE RULES (follow strictly, every reply):
 - Skip disclaimers and filler ("It's important to note that...", "I'd be happy to help..."). Get straight to the answer.
 - One specific fact beats a general overview. If the visitor's question is broad, give the single most relevant fact and ask ONE clarifying question instead of listing every visa category.
 -  Only mention booking a consultation when the visitor shows real interest or asks something requiring case-specific advice — don't append it to every message.`;
-
 const MODEL_NAME = 'gemini-3.1-flash-lite';
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 const TIMEOUT_MS = 25000;
